@@ -107,20 +107,21 @@ class Decoder(nn.Module):
         y=self.ln_final(x) #(batch_size, tokens_nb, vocab_size)
         return y
     
-    def generate(self, x, max_len): #x is a tensor representing the current context, x.shape=(batch_size, tokens_nb)
+    def generate(self, x, max_len): #x is a tensor representing the current context, x.shape=(,tokens_nb)
         tokens_nb=len(x)
         if tokens_nb>self.max_window_size:
             raise Exception("Input sequence is too long")
         for _ in range(max_len):
-            x_window=x[-self.max_window_size:] #(batch_size, tokens_nb)
-            y_pred=self.forward(x_window) #(batch_size, tokens_nb, vocab_size)
-            #getting last word_token
-            last_token=y_pred[-1,:] #(batch_size, vocab_size)
-            #predicting next word
-            probas=F.softmax(last_token, dim=-1) #(batch_size, vocab_size)
-            next_token=torch.multinomial(probas, 1) #(batch_size, 1)
+            x_window=x[-self.max_window_size:] 
+            y_pred=self.forward(x_window) 
+            #getting last word token
+            last_token=y_pred[-1,:] #(,vocab_size)
+            #predicting next word probas
+            probas=F.softmax(last_token, dim=-1) #(,vocab_size)
+            #selecting the next token
+            next_token=torch.multinomial(probas, 1)
             #adding next token to x
-            x=torch.cat([x, next_token], dim=-1) #(batch_size, tokens_nb+1)
+            x=torch.cat([x, next_token], dim=-1) #(,tokens_nb+1)
         return x
 
 
